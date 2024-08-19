@@ -73,20 +73,23 @@ func WatchPost() gin.HandlerFunc {
 		if err != nil || idCheck < 0 {
 			fmt.Println(err.Error(), " or id < 0")
 		} else { // all good
-			postgres.WatchPostByID(idCheck)
+			sourceOfPost := postgres.WatchPostByID(idCheck)
+			c.JSON(http.StatusOK, gin.H{sourceOfPost.Title: sourceOfPost.Post})
 		}
 	}
 }
 
 // TODO реализовать функцию edit post in postgres
 func EditingPost() gin.HandlerFunc {
+	newTitle := "for test"
+	newText := "i love anime yopta"
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		idCheck, err := strconv.Atoi(id)
 		if err != nil || idCheck < 0 {
 			fmt.Println(err.Error(), " or id < 0")
 		} else { // all good
-			postgres.EditPostByID(idCheck)
+			postgres.FullEditPostByID(idCheck, newTitle, newText)
 		}
 	}
 }

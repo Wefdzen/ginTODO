@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"wefdzen/cmd/postes"
 
@@ -54,15 +55,56 @@ func GetAllPost() []postes.PostUser {
 }
 
 func DeletePostByID(id int) {
+	// Connect
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	urlToDataBase := fmt.Sprintf("postgres://%v:%v@%v:%v/%v", Cfg.PGuser, Cfg.PGpassword, Cfg.PGaddress, Cfg.PGPort, Cfg.PGdbname)
+	conn, err := pgx.Connect(context.Background(), urlToDataBase)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer conn.Close(context.Background())
 
+	command := fmt.Sprintf(`DELETE FROM %s WHERE id=$1`, Cfg.PGnameTable)
+	_, err = conn.Exec(context.Background(), command, strconv.Itoa(id))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
-func EditPostByID(id int) {
+func FullEditPostByID(id int, newTitle, newText string) {
+	// Connect
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	urlToDataBase := fmt.Sprintf("postgres://%v:%v@%v:%v/%v", Cfg.PGuser, Cfg.PGpassword, Cfg.PGaddress, Cfg.PGPort, Cfg.PGdbname)
+	conn, err := pgx.Connect(context.Background(), urlToDataBase)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer conn.Close(context.Background())
 
+	command := fmt.Sprintf(`UPDATE %s SET title=$1, source_text=$2  WHERE id=$3`, Cfg.PGnameTable)
+	_, err = conn.Exec(context.Background(), command, newTitle, newText, strconv.Itoa(id))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 }
 
-func WatchPostByID(id int) {
+func WatchPostByID(id int) postes.PostUser {
+	// Connect
+	tmp := postes.PostUser{Title: "", Post: ""}
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	urlToDataBase := fmt.Sprintf("postgres://%v:%v@%v:%v/%v", Cfg.PGuser, Cfg.PGpassword, Cfg.PGaddress, Cfg.PGPort, Cfg.PGdbname)
+	conn, err := pgx.Connect(context.Background(), urlToDataBase)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer conn.Close(context.Background())
 
+	command := fmt.Sprintf(`SELECT title, source_text FROM %s WHERE id=$1`, Cfg.PGnameTable)
+	err = conn.QueryRow(context.Background(), command, id).Scan(&tmp.Title, &tmp.Post)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	return tmp
 }
 
 func init() {

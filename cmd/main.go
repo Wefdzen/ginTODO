@@ -24,6 +24,7 @@ func main() {
 		v2.GET("/postes", handler.GetAllPostes())
 		v2.GET("/postes/:id", handler.WatchPost())
 		v2.DELETE("/postes/:id", handler.DeletePostes())
+		v2.PUT("/postes/:id", handler.EditingPost())
 		v2.GET("/createpost", handler.MainPage()) // после mainpage не надо / он будет отправлять на mainpage/ ...
 		v2.POST("/createpost", handler.CreateNewPost())
 
