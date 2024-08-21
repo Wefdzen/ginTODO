@@ -9,9 +9,44 @@ import (
 	"strconv"
 
 	"wefdzen/cmd/postes"
+	"wefdzen/cmd/users"
 
 	"github.com/jackc/pgx/v5"
 )
+
+func RegistrationUser(newUser *users.User) {
+	// Connect
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	urlToDataBase := fmt.Sprintf("postgres://%v:%v@%v:%v/%v", Cfg.PGuser, Cfg.PGpassword, Cfg.PGaddress, Cfg.PGPort, Cfg.PGdbname)
+	conn, err := pgx.Connect(context.Background(), urlToDataBase)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer conn.Close(context.Background())
+
+	pgname := "users" //TODO create new db name users
+	//check in db availible login
+
+	//add new user
+	command := fmt.Sprintf(`INSERT INTO %s (login, email, password) VALUES ($1, $2, $3)`, pgname)
+	_, err = conn.Exec(context.Background(), command, newUser.Login, newUser.Email, newUser.Password)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func CheckDataForLogin(login, email string) bool {
+	// Connect
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+	urlToDataBase := fmt.Sprintf("postgres://%v:%v@%v:%v/%v", Cfg.PGuser, Cfg.PGpassword, Cfg.PGaddress, Cfg.PGPort, Cfg.PGdbname)
+	conn, err := pgx.Connect(context.Background(), urlToDataBase)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	defer conn.Close(context.Background())
+
+	return false
+}
 
 func InsertNewPost(title string, text string) error {
 	// Connect

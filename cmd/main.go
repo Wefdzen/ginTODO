@@ -17,6 +17,8 @@ func main() {
 	{
 		v1.GET("/login", handler.Login())
 		v1.POST("/login", handler.LoginPost())
+		v1.GET("/registration", handler.Registration())
+		v1.POST("/registration", handler.RegistrationPost())
 	}
 
 	v2 := router.Group("/")
