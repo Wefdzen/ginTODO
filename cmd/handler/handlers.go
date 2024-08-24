@@ -17,17 +17,20 @@ func Login() gin.HandlerFunc {
 		c.HTML(http.StatusOK, "login.html", nil) //parse html file
 	}
 }
-
 func LoginPost() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		login := c.PostForm("login")                             // Получение значения поля "login"
-		password := c.PostForm("password")                       // Получение значения поля "password"
-		fmt.Printf("login: %s, password: %s\n", login, password) // Обработка данных
+		login := c.PostForm("login")       // Получение значения поля "login"
+		password := c.PostForm("password") // Получение значения поля "password"
 		//check login with hash bcrypt compare password
+		if postgres.CheckDataForLogin(login, password) {
+			// потомо сделать доступ к поста токо с jwt tokens
+			//TODO generate jwt token
+			//add to set-cookie
+			c.Redirect(http.StatusMovedPermanently, "http://localhost:8080/postes")
+		} else {
+			c.String(http.StatusUnauthorized, "loh!")
+		}
 
-		//TODO generate jwt token
-		//add to set-cookie
-		c.String(http.StatusOK, "good!")
 	}
 }
 
@@ -36,7 +39,6 @@ func Registration() gin.HandlerFunc {
 		c.HTML(http.StatusOK, "registration.html", nil) //parse html file
 	}
 }
-
 func RegistrationPost() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		login := c.PostForm("login")
@@ -51,7 +53,11 @@ func RegistrationPost() gin.HandlerFunc {
 		}
 
 		//send to database with hash bcrypt
-		postgres.RegistrationUser(&newUser)
+		if success := postgres.RegistrationUser(newUser); success {
+			c.Redirect(http.StatusMovedPermanently, "http://localhost:8080/login")
+		} else {
+			c.String(401, "login занят")
+		}
 
 	}
 }

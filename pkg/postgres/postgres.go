@@ -12,9 +12,10 @@ import (
 	"wefdzen/cmd/users"
 
 	"github.com/jackc/pgx/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func RegistrationUser(newUser *users.User) {
+func RegistrationUser(newUser users.User) bool {
 	// Connect
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	urlToDataBase := fmt.Sprintf("postgres://%v:%v@%v:%v/%v", Cfg.PGuser, Cfg.PGpassword, Cfg.PGaddress, Cfg.PGPort, Cfg.PGdbname)
@@ -24,18 +25,27 @@ func RegistrationUser(newUser *users.User) {
 	}
 	defer conn.Close(context.Background())
 
-	pgname := "users" //TODO create new db name users
 	//check in db availible login
+	var not_exists bool = false //  чтобы не записывать в бд
+	query := fmt.Sprintf("SELECT NOT EXISTS(SELECT login FROM %s WHERE login=$1)", "users")
+	err = conn.QueryRow(context.Background(), query, newUser.Login).Scan(&not_exists)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 
 	//add new user
-	command := fmt.Sprintf(`INSERT INTO %s (login, email, password) VALUES ($1, $2, $3)`, pgname)
-	_, err = conn.Exec(context.Background(), command, newUser.Login, newUser.Email, newUser.Password)
-	if err != nil {
-		fmt.Println(err.Error())
+	if not_exists { // если такой логин не занят то добавляем
+		_, err = conn.Exec(context.Background(), `INSERT INTO users (login, email, password) VALUES ($1, $2, $3)`, newUser.Login, newUser.Email, newUser.Password)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		return true // регистрация успешна
 	}
+	fmt.Println("login уже занят")
+	return false // login занят
 }
 
-func CheckDataForLogin(login, email string) bool {
+func CheckDataForLogin(login, password string) bool {
 	// Connect
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	urlToDataBase := fmt.Sprintf("postgres://%v:%v@%v:%v/%v", Cfg.PGuser, Cfg.PGpassword, Cfg.PGaddress, Cfg.PGPort, Cfg.PGdbname)
@@ -45,7 +55,15 @@ func CheckDataForLogin(login, email string) bool {
 	}
 	defer conn.Close(context.Background())
 
-	return false
+	passFromDB := ""
+	err = conn.QueryRow(context.Background(), `SELECT password FROM users WHERE login=$1`, login).Scan(&passFromDB)
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+	if success := bcrypt.CompareHashAndPassword([]byte(passFromDB), []byte(password)); success == nil {
+		return true //login success
+	}
+	return false //login not success
 }
 
 func InsertNewPost(title string, text string) error {
