@@ -45,7 +45,7 @@ func RegistrationUser(newUser users.User) bool {
 	return false // login занят
 }
 
-func CheckDataForLogin(login, password string) bool {
+func CheckDataForLogin(login, email, password string) bool {
 	// Connect
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	urlToDataBase := fmt.Sprintf("postgres://%v:%v@%v:%v/%v", Cfg.PGuser, Cfg.PGpassword, Cfg.PGaddress, Cfg.PGPort, Cfg.PGdbname)
@@ -56,7 +56,7 @@ func CheckDataForLogin(login, password string) bool {
 	defer conn.Close(context.Background())
 
 	passFromDB := ""
-	err = conn.QueryRow(context.Background(), `SELECT password FROM users WHERE login=$1`, login).Scan(&passFromDB)
+	err = conn.QueryRow(context.Background(), `SELECT password FROM users WHERE login=$1 AND email=$2`, login, email).Scan(&passFromDB)
 	if err != nil {
 		fmt.Println(err.Error())
 	}

@@ -15,6 +15,7 @@ func main() {
 
 	v1 := router.Group("/")
 	{
+		v1.GET("/mainpage", handler.MainPage())
 		v1.GET("/login", handler.Login())
 		v1.POST("/login", handler.LoginPost())
 		v1.GET("/registration", handler.Registration())
