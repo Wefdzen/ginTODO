@@ -35,8 +35,6 @@ func LoginPost() gin.HandlerFunc {
 
 		//check login with hash bcrypt compare password
 		if postgres.CheckDataForLogin(login, email, password) {
-			// потом сделать доступ к поста токо с jwt tokens
-			//TODO generate jwt token
 			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 				"admin": "false",
 				"exp":   time.Now().Add(time.Hour * 24 * 30).Unix(), //30 day
@@ -57,38 +55,6 @@ func LoginPost() gin.HandlerFunc {
 		}
 
 	}
-}
-
-// type MyClaims struct {
-// 	jwt.RegisteredClaims
-// 	Admin bool  `json:"admin"`
-// 	Exp   int64 `json:"exp"`
-// }
-
-func CheckJWToken(tokenString string) bool {
-	//token, err
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-
-		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-		return []byte("secret-key"), nil
-	})
-	if err != nil {
-		return false
-	}
-
-	//parse claims
-	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		if float64(time.Now().Unix()) >= claims["exp"].(float64) { // проверка exp токена
-			return false
-		} else {
-			return true
-		}
-	}
-	return false
 }
 
 func Registration() gin.HandlerFunc {
@@ -121,21 +87,9 @@ func RegistrationPost() gin.HandlerFunc {
 
 func MainPage() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		token, err := c.Cookie("Authorization") //take cookie
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Can't take cookie auth",
-			})
-			return
-		}
-		if proverka := CheckJWToken(token); proverka {
-			c.JSON(http.StatusOK, gin.H{
-				"status": "good",
-			})
-		} else {
-			c.AbortWithStatus(http.StatusUnauthorized)
-		}
-
+		c.JSON(http.StatusOK, gin.H{
+			"status": "ebat middleware it's work",
+		})
 	}
 }
 

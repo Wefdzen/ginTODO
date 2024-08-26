@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"wefdzen/cmd/handler"
+	"wefdzen/cmd/middleware"
 
 	"github.com/gin-gonic/gin"
 )
@@ -15,14 +16,14 @@ func main() {
 
 	v1 := router.Group("/")
 	{
-		v1.GET("/mainpage", handler.MainPage())
+		v1.GET("/mainpage", middleware.Authorization(), handler.MainPage())
 		v1.GET("/login", handler.Login())
 		v1.POST("/login", handler.LoginPost())
 		v1.GET("/registration", handler.Registration())
 		v1.POST("/registration", handler.RegistrationPost())
 	}
-
 	v2 := router.Group("/")
+	v2.Use(middleware.Authorization())
 	{
 		v2.GET("/postes", handler.GetAllPostes())
 		v2.GET("/postes/:id", handler.WatchPost())
