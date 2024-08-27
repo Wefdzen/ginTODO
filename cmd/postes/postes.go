@@ -3,7 +3,7 @@ package postes
 //post
 type PostUser struct {
 	Title string `json:"title"`
-	Post  string `json:"post "`
+	Post  string `json:"post"`
 }
 
 //slice with postes

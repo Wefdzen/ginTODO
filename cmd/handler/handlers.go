@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"wefdzen/cmd/postes"
 	"wefdzen/cmd/users"
 	"wefdzen/pkg/postgres"
 
@@ -21,18 +22,15 @@ func Login() gin.HandlerFunc {
 }
 func LoginPost() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var jsonInput users.User
-		//TODO //add postform
+		//		login, email, password := JsonOrFormForLoginOrReg(c)
 		// Парсинг JSON из тела запроса
+		var jsonInput users.User
 		if err := c.BindJSON(&jsonInput); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
-			return
 		}
-
 		login := jsonInput.Login
 		email := jsonInput.Email
 		password := jsonInput.Password
-
 		//check login with hash bcrypt compare password
 		if postgres.CheckDataForLogin(login, email, password) {
 			token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -95,8 +93,15 @@ func MainPage() gin.HandlerFunc {
 
 func CreateNewPost() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		title := c.PostForm("title_of_post")
-		text := c.PostForm("source_of_post")
+		// title := c.PostForm("title_of_post")
+		// text := c.PostForm("source_of_post")
+		var jsonInput postes.PostUser
+		if err := c.BindJSON(&jsonInput); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+			return
+		}
+		title := jsonInput.Title
+		text := jsonInput.Post
 		postgres.InsertNewPost(title, text)
 		c.String(http.StatusOK, "Данные отправлены успешно!")
 		c.Redirect(http.StatusMovedPermanently, "http://localhost:8080/postes")
@@ -106,11 +111,13 @@ func CreateNewPost() gin.HandlerFunc {
 func GetAllPostes() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		postesFromDb := postgres.GetAllPost()
-		//fmt.Println(postesFromDb)
+		var allPostes postes.Postes
 		for _, v := range postesFromDb {
-			fmt.Println("name of title:", v.Title, " text:", v.Post)
+			allPostes.Add(postes.PostUser{Title: v.Title, Post: v.Post})
 		}
-		c.JSON(http.StatusOK, gin.H{"Lol": "postes"})
+		c.JSON(http.StatusOK, gin.H{
+			"posts": allPostes,
+		})
 	}
 }
 
@@ -140,9 +147,17 @@ func WatchPost() gin.HandlerFunc {
 }
 
 func EditingPost() gin.HandlerFunc {
-	newTitle := "for test"
-	newText := "i love anime yopta"
+	// newTitle := "for test"
+	// newText := "i love berserk"
 	return func(c *gin.Context) {
+		var jsonInput postes.PostUser
+		if err := c.BindJSON(&jsonInput); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid JSON"})
+			return
+		}
+		newTitle := jsonInput.Title
+		newText := jsonInput.Post
+
 		id := c.Param("id")
 		idCheck, err := strconv.Atoi(id)
 		if err != nil || idCheck < 0 {
