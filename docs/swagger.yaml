@@ -1,0 +1,214 @@
+openapi: 3.0.3
+info:
+    title: Blog Server - OpenAPI 3.0
+    description: |-
+        This is a sample Blog Server based on the OpenAPI 3.0 specification.
+    termsOfService: http://swagger.io/terms/
+    contact:
+        email: hertebe@gmail.com
+    version: 1.0.11
+servers:
+    - url: http://localhost:8080/
+      description: Dev server
+
+paths: # create get request
+    /postes:
+        get:
+            summary: Method for get all postes
+            tags:
+                - Postes
+            operationId: GetAllPostes
+            responses:
+                "200":
+                    description: ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Postes"
+                "default":
+                    description: not ok
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+    /postes/{post_id}:
+        get:
+            summary: Method for get all postes
+            tags:
+                - Postes
+            operationId: WathcPost
+            parameters:
+                - name: post_id
+                  in: path
+                  required: true
+                  description: id of post
+                  schema:
+                      type: string
+                  example: "123"
+            responses:
+                "200":
+                    description: return json post by id
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Post"
+                "default":
+                    description: error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+        delete:
+            summary: Method for delete post by id
+            tags:
+                - Postes
+            operationId: DeletePostes
+            parameters:
+                - name: post_id
+                  in: path
+                  required: true
+                  description: id of post
+                  schema:
+                      type: string
+                  example: "123"
+            responses:
+                "200":
+                    description: success delete
+                    content:
+                        application/json: {}
+                "default":
+                    description: error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+    /createpost:
+        post:
+            summary: Create a new post
+            tags:
+                - Postes
+            operationId: CreateNewPost
+            requestBody: # то что мы должны передовать
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Post" # id не надо передовать сервер генерирует
+            responses:
+                "200":
+                    description: return status
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Post"
+                "default":
+                    description: error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+    /login:
+        post:
+            tags:
+                - Auth
+            operationId: LoginPost
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/User"
+            responses:
+                "200":
+                    description: auth success
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/JWT"
+                "default":
+                    description: auth error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+    /registration:
+        post:
+            tags:
+                - Auth
+            operationId: RegistrationPost
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/User"
+            responses:
+                "200":
+                    description: registration success
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/User"
+                "default":
+                    description: auth error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Error"
+
+components:
+    schemas:
+        Post: # обьект пост с его описанием
+            type: object
+            required: # нужны для заполнения
+                - post_name
+                - text_post
+            properties:
+                post_id:
+                    type: integer
+                    example: 4
+                post_name:
+                    type: string
+                    example: how you feel today
+                text_post:
+                    type: string
+                    example: good
+        Postes:
+            type: array
+            items:
+                $ref: "#/components/schemas/Post"
+        User:
+            type: object
+            required:
+                - login
+                - email
+                - password
+            properties:
+                ID:
+                    type: integer
+                login:
+                    type: string
+                    example: felix
+                email:
+                    type: string
+                    example: example@gmail.com
+                password:
+                    type: string
+                    example: "123 on server save as hash by help bcrypt"
+        JWT:
+            type: object
+            properties:
+                Token:
+                    type: string
+                    #TODO change to my jwt exp with admin
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+        Error:
+            type: object
+            required:
+                - code
+                - message
+            properties:
+                code:
+                    type: integer
+                message:
+                    type: string
